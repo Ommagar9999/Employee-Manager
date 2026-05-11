@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Manager</title>
+
+    <style>
+
+        /* ===== BACKGROUND THEME ===== */
+        body {
+           font-family: 'Segoe UI', sans-serif;
+           background: linear-gradient(135deg, #4f46e5, #9333ea);
+           margin: 0;
+           padding: 0;
+           text-align: center;
+        }
+
+        /* TITLE */
+        h1 {
+           color: #ffffff;
+           margin-top: 25px;
+           letter-spacing: 1px;
+        }
+
+        /* FORM CONTAINER (THEMED GLASS) */
+        .container {
+           width: 380px;
+           margin: 30px auto;
+           background: rgba(255, 255, 255, 0.12);
+           backdrop-filter: blur(15px);
+           padding: 25px;
+           border-radius: 20px;
+           border: 1px solid rgba(255,255,255,0.2);
+           box-shadow: 0 10px 35px rgba(0,0,0,0.3);
+        }
+
+        /* INPUTS */
+        input {
+           width: 90%;
+           padding: 12px;
+           margin: 10px 0;
+           border: none;
+           border-radius: 10px;
+           outline: none;
+           background: rgba(255,255,255,0.9);
+           transition: 0.3s;
+        }
+
+        input:focus {
+           transform: scale(1.04);
+        }
+
+        /* ===== BUTTON SYSTEM (THEME MATCHED) ===== */
+        button {
+           padding: 10px 16px;
+           margin: 8px 5px;
+           border: none;
+           border-radius: 10px;
+           color: white;
+           font-weight: bold;
+           cursor: pointer;
+           transition: 0.3s;
+        }
+
+        /* ADD BUTTON */
+        button.add {
+           background: #2563eb;
+        }
+
+        /* LOAD BUTTON */
+        button.load {
+           background: #6366f1;
+        }
+
+        /* DELETE BUTTON */
+        button.delete {
+           background: #ef4444;
+        }
+
+        /* UPDATE BUTTON */
+        button.update {
+           background: #22c55e;
+        }
+
+        /* hover effect */
+        button:hover {
+           transform: translateY(-3px);
+           opacity: 0.9;
+        }
+
+        /* ===== LIST AREA ===== */
+        #list {
+           display: flex;
+           flex-wrap: wrap;
+           justify-content: center;
+           gap: 20px;
+           padding: 20px;
+        }
+
+        /* ===== CARD THEME ===== */
+        .emp {
+           background: rgba(255, 255, 255, 0.15);
+           backdrop-filter: blur(15px);
+           border: 1px solid rgba(255,255,255,0.25);
+           padding: 18px;
+           border-radius: 18px;
+           width: 260px;
+           box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+           transition: 0.3s;
+           color: #fff;
+        }
+
+        .emp:hover {
+           transform: translateY(-8px) scale(1.03);
+        }
+
+        /* NAME */
+        .emp b {
+           font-size: 19px;
+           display: block;
+           margin-bottom: 6px;
+           color: #fff;
+        }
+
+        /* BUTTON WIDTH INSIDE CARD */
+        .emp button {
+           width: 45%;
+           margin-top: 10px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h1>Employee Manager</h1>
+
+<div class="container">
+
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="email" placeholder="Email">
+    <input type="text" id="phone" placeholder="Phone">
+
+    <br>
+
+    <button class="add" onclick="addEmployee()">Add</button>
+    <button class="load" onclick="loadEmployees()">Load</button>
+
+</div>
+
+<h2 style="color:white;">Employees List</h2>
+<div id="list"></div>
+
+<script>
+
+    const baseUrl = "http://localhost:8080/employees";
+
+    // ADD
+   async function addEmployee() {
+
+    let name = document.getElementById("name").value.trim();
+    let email = document.getElementById("email").value.trim();
+    let phone = document.getElementById("phone").value.trim();
+
+
+    if (name === "" || email === "" || phone === "") {
+        alert("⚠ Please fill all fields before adding employee!");
+        return;
+    }
+
+    let emp = {
+        name: name,
+        email: email,
+        phone: phone
+    };
+
+    await fetch(baseUrl, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(emp)
+    });
+
+    // clear inputs after success
+    document.getElementById("name").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("phone").value = "";
+
+    loadEmployees();
+}
+
+    // LOAD
+    async function loadEmployees() {
+
+        let res = await fetch(baseUrl);
+        let data = await res.json();
+
+        let list = document.getElementById("list");
+        list.innerHTML = "";
+
+        data.forEach(emp => {
+            list.innerHTML += `
+                <div class="emp">
+                    <b>${emp.name}</b>
+                    ${emp.email}<br>
+                    ${emp.phone}<br>
+
+                    <button class="delete" onclick="deleteEmp(${emp.id})">Delete</button>
+                    <button class="update" onclick="updateEmp(${emp.id})">Update</button>
+                </div>
+            `;
+        });
+    }
+
+    // DELETE
+    async function deleteEmp(id) {
+        await fetch(baseUrl + "/" + id, { method: "DELETE" });
+        loadEmployees();
+    }
+
+    // UPDATE
+    async function updateEmp(id) {
+
+        let name = prompt("Enter new name");
+        let email = prompt("Enter new email");
+        let phone = prompt("Enter new phone");
+
+        let emp = { name, email, phone };
+
+        await fetch(baseUrl + "/" + id, {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(emp)
+        });
+
+        loadEmployees();
+    }
+
+</script>
+
+</body>
+</html>
